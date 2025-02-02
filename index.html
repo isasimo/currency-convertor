@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Currency Conversion App</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Currency Conversion App</h1>
+      <form id="conversionForm" action="/convert" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="csv_file">Choose CSV file:</label>
+          <input type="file" name="csv_file" accept=".csv" required />
+        </div>
+
+        <div class="form-group">
+          <label for="baseCurrency">Original Currency:</label>
+          <input type="text" name="baseCurrency" placeholder="e.g., EUR" required />
+        </div>
+
+        <div class="form-group">
+          <label for="targetCurrency">Target Currency:</label>
+          <input type="text" name="targetCurrency" placeholder="e.g., CHF" required />
+        </div>
+
+        <button type="submit">Convert</button>
+
+        <div class="format-note">
+          <p>Upload a CSV file with the following columns:</p>
+          <p>date, amount</p>
+          <p>Accepted date format: DD.MM.YY, DD.MM.YYYY, DD/MM/YY, DD/MM/YYYY, YYYY-MM-DD</p>
+          <p>Note: Numbers can use either comma (,) or dot (.) as decimal separator.</p>
+          <p>Examples: 1234,56 or 1234.56</p>
+        </div>
+      </form>
+
+      <div id="results" class="results hidden">
+        <!-- Results will be inserted here -->
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('conversionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const resultsDiv = document.getElementById('results');
+
+        try {
+          const response = await fetch('/convert', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            resultsDiv.innerHTML = `
+              <div class="alert success">
+                <h3>✅ Conversion Successful!</h3>
+                <p>Total rows processed: ${data.stats.totalRows}</p>
+                <p>Successful conversions: ${data.stats.successfulConversions}</p>
+                <p>Failed conversions: ${data.stats.failedConversions}</p>
+                <a href="/download-converted-csv" class="download-button">Download Converted CSV</a>
+              </div>
+            `;
+          } else {
+            let errorMessage = data.message;
+            let errorDetails = '';
+
+            // Handle specific error types
+            switch (data.type) {
+              case 'PROCESSING_ERRORS':
+                errorMessage = 'Some rows could not be processed:';
+                errorDetails = `<ul class="error-list">
+                  ${data.errors.map((err) => `<li>${err}</li>`).join('')}
+                </ul>`;
+                break;
+              case 'EMPTY_FILE':
+                errorDetails = '<p>Please ensure your CSV file contains data.</p>';
+                break;
+              case 'INVALID_CURRENCY':
+                errorDetails = '<p>Please check the currency codes you entered.</p>';
+                break;
+              case 'FILE_NOT_FOUND':
+                errorDetails = '<p>Please try uploading your file again.</p>';
+                break;
+              case 'API_ERROR':
+                errorDetails = '<p>The exchange rate service is temporarily unavailable. Please try again in a few minutes.</p>';
+                break;
+            }
+
+            resultsDiv.innerHTML = `
+              <div class="alert error">
+                <h3>❌ Conversion Failed</h3>
+                <p>${errorMessage}</p>
+                ${errorDetails}
+              </div>
+            `;
+          }
+        } catch (error) {
+          resultsDiv.innerHTML = `
+            <div class="alert error">
+              <h3>❌ Error</h3>
+              <p>An unexpected error occurred. Please try again.</p>
+              <p class="error-details">If the problem persists, please check your file format and try again later.</p>
+            </div>
+          `;
+        }
+
+        resultsDiv.classList.remove('hidden');
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+      });
+    </script>
+  </body>
+</html>
