@@ -1,4 +1,4 @@
-# Currency Conversion App
+# Historical Currency Convertor App
 
 A Node.js application for converting currencies in CSV files.
 
