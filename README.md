@@ -1,11 +1,11 @@
-# Historical Currency Convertor App
+# Historical Currency Convertor
 
 A Node.js application for converting currencies in CSV files.
 
 ## Setup
 
-1. Clone the repository: `git clone https://github.com/your-repo/currency-conversion-app.git`
-2. Navigate to the project directory: `cd currency-conversion-app`
+1. Clone the repository: `git clone https://github.com/your-repo/historical-currency-convertor.git`
+2. Navigate to the project directory: `cd historical-currency-convertor`
 3. Install dependencies: `npm install`
 4. Create a `.env` file based on `.env.example` and set your API key
 5. Run the server: `node app.js`
